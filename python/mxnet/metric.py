@@ -71,13 +71,17 @@ class EvalMetric(object):
             return (names, values)
 
     def get_name_value(self):
-        """Get zipped name and value pairs"""
+        """Get zipped name and value pairs."""
         name, value = self.get()
         if not isinstance(name, list):
             name = [name]
         if not isinstance(value, list):
             value = [value]
         return zip(name, value)
+
+    def __str__(self):
+        return "EvalMetric: {}".format(dict(self.get_name_value()))
+
 
 class CompositeEvalMetric(EvalMetric):
     """Manage multiple evaluation metrics."""
@@ -126,7 +130,7 @@ class CompositeEvalMetric(EvalMetric):
 ########################
 
 class Accuracy(EvalMetric):
-    """Calculate accuracy"""
+    """Calculate accuracy."""
 
     def __init__(self):
         super(Accuracy, self).__init__('accuracy')
@@ -135,7 +139,9 @@ class Accuracy(EvalMetric):
         check_label_shapes(labels, preds)
 
         for label, pred_label in zip(labels, preds):
-            pred_label = ndarray.argmax_channel(pred_label).asnumpy().astype('int32')
+            if pred_label.shape != label.shape:
+                pred_label = ndarray.argmax_channel(pred_label)
+            pred_label = pred_label.asnumpy().astype('int32')
             label = label.asnumpy().astype('int32')
 
             check_label_shapes(label, pred_label)
@@ -144,7 +150,7 @@ class Accuracy(EvalMetric):
             self.num_inst += len(pred_label.flat)
 
 class TopKAccuracy(EvalMetric):
-    """Calculate top k predictions accuracy"""
+    """Calculate top k predictions accuracy."""
 
     def __init__(self, **kwargs):
         super(TopKAccuracy, self).__init__('top_k_accuracy')
@@ -220,12 +226,51 @@ class F1(EvalMetric):
             self.sum_metric += f1_score
             self.num_inst += 1
 
+
+class Perplexity(EvalMetric):
+    """Calculate perplexity.
+
+    Parameters
+    ----------
+    ignore_label : int or None
+        Index of invalid label to ignore when
+        counting. Usually should be -1. Include
+        all entries if None.
+    axis : int (default -1)
+        The axis from prediction that was used to
+        compute softmax. By default use the last
+        axis.
+    """
+    def __init__(self, ignore_label, axis=-1):
+        super(Perplexity, self).__init__('Perplexity')
+        self.ignore_label = ignore_label
+        self.axis = axis
+
+    def update(self, labels, preds):
+        assert len(labels) == len(preds)
+        loss = 0.
+        num = 0
+        for label, pred in zip(labels, preds):
+            assert label.size == pred.size/pred.shape[-1], \
+                "shape mismatch: %s vs. %s"%(label.shape, pred.shape)
+            label = label.as_in_context(pred.context).reshape((label.size,))
+            pred = ndarray.pick(pred, label.astype(dtype='int32'), axis=self.axis)
+            if self.ignore_label is not None:
+                ignore = label == self.ignore_label
+                num -= ndarray.sum(ignore).asscalar()
+                pred = pred*(1-ignore) + ignore
+            loss -= ndarray.sum(ndarray.log(ndarray.maximum(1e-10, pred))).asscalar()
+            num += pred.size
+        self.sum_metric += math.exp(loss/num)
+        self.num_inst += 1
+
+
 ####################
 # REGRESSION METRICS
 ####################
 
 class MAE(EvalMetric):
-    """Calculate Mean Absolute Error loss"""
+    """Calculate Mean Absolute Error (MAE) loss."""
 
     def __init__(self):
         super(MAE, self).__init__('mae')
@@ -244,7 +289,7 @@ class MAE(EvalMetric):
             self.num_inst += 1 # numpy.prod(label.shape)
 
 class MSE(EvalMetric):
-    """Calculate Mean Squared Error loss"""
+    """Calculate Mean Squared Error (MSE) loss."""
     def __init__(self):
         super(MSE, self).__init__('mse')
 
@@ -262,7 +307,7 @@ class MSE(EvalMetric):
             self.num_inst += 1 # numpy.prod(label.shape)
 
 class RMSE(EvalMetric):
-    """Calculate Root Mean Squred Error loss"""
+    """Calculate Root Mean Squred Error (RMSE) loss."""
     def __init__(self):
         super(RMSE, self).__init__('rmse')
 
@@ -280,9 +325,10 @@ class RMSE(EvalMetric):
             self.num_inst += 1
 
 class CrossEntropy(EvalMetric):
-    """Calculate Cross Entropy loss"""
-    def __init__(self):
+    """Calculate Cross Entropy loss."""
+    def __init__(self, eps=1e-8):
         super(CrossEntropy, self).__init__('cross-entropy')
+        self.eps = eps
 
     def update(self, labels, preds):
         check_label_shapes(labels, preds)
@@ -295,11 +341,11 @@ class CrossEntropy(EvalMetric):
             assert label.shape[0] == pred.shape[0]
 
             prob = pred[numpy.arange(label.shape[0]), numpy.int64(label)]
-            self.sum_metric += (-numpy.log(prob)).sum()
+            self.sum_metric += (-numpy.log(prob + self.eps)).sum()
             self.num_inst += label.shape[0]
 
 class Torch(EvalMetric):
-    """Dummy metric for torch criterions"""
+    """Dummy metric for torch criterions."""
     def __init__(self, name='torch'):
         super(Torch, self).__init__(name)
 
@@ -321,7 +367,7 @@ class CustomMetric(EvalMetric):
     feval : callable(label, pred)
         Customized evaluation function.
     name : str, optional
-        The name of the metric
+        The name of the metric.
     allow_extra_outputs : bool
         If true, the prediction outputs can have extra outputs.
         This is useful in RNN, where the states are also produced
@@ -344,9 +390,6 @@ class CustomMetric(EvalMetric):
             label = label.asnumpy()
             pred = pred.asnumpy()
 
-            if pred.shape[1] == 2:
-                pred = pred[:, 1]
-
             reval = self._feval(label, pred)
             if isinstance(reval, tuple):
                 (sum_metric, num_inst) = reval
@@ -365,7 +408,7 @@ def np(numpy_feval, name=None, allow_extra_outputs=False):
     numpy_feval : callable(label, pred)
         Customized evaluation function.
         This will get called with the labels and predictions
-        for a minibatch, each as numpy arrays.  This function
+        for a minibatch, each as NumPy arrays.  This function
         should return a single float.
     name : str, optional
         The name of the metric.

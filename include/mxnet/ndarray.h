@@ -11,6 +11,7 @@
 #include <dmlc/io.h>
 #include <dmlc/type_traits.h>
 #include <dmlc/registry.h>
+#include <nnvm/node.h>
 #include <vector>
 #include <map>
 #include <string>
@@ -19,7 +20,7 @@
 #include "./storage.h"
 #include "./engine.h"
 #if MKL_EXPERIMENTAL == 1
-#include "./mkl_memory.h"
+#include <mkl_memory.h>
 #endif
 // check c++11
 #if DMLC_USE_CXX11 == 0
@@ -27,6 +28,30 @@
 #endif
 
 namespace mxnet {
+
+// forward declaration
+namespace autograd {
+class AGNode;
+
+using AGNodePtr = std::shared_ptr<AGNode>;
+
+class AGNodeEntry {
+ public:
+  AGNodePtr ag_node;
+  uint32_t index;
+  uint32_t version;
+
+  void clear() {
+    ag_node.reset();
+    index = version = 0;
+  }
+
+  nnvm::NodeEntry nn_entry() const;
+};
+
+class AutogradRuntime;
+}  // namespace autograd
+
 /*!
  * \brief ndarray interface
  */
@@ -39,7 +64,7 @@ class NDArray {
 #endif
   }
   /*!
-   * \brief constructing a new dynamic NDArray
+   * \brief constructs a new dynamic NDArray
    * \param shape the shape of array
    * \param ctx context of NDArray
    * \param delay_alloc whether delay the allocation
@@ -48,7 +73,7 @@ class NDArray {
   NDArray(const TShape &shape, Context ctx,
           bool delay_alloc = false, int dtype = mshadow::default_type_flag)
       : ptr_(std::make_shared<Chunk>(shape.Size(), ctx, delay_alloc, dtype)),
-        shape_(shape), offset_(0), dtype_(dtype) {
+        shape_(shape), offset_(0), dtype_(dtype), entry_({nullptr, 0, 0}) {
 #if MKL_EXPERIMENTAL == 1
       Mkl_mem_ = std::make_shared<MKLMemHolder>();
 #endif
@@ -62,7 +87,7 @@ class NDArray {
    */
   NDArray(const TBlob &data, int dev_id)
       : ptr_(std::make_shared<Chunk>(data, dev_id)), shape_(data.shape_), offset_(0),
-        dtype_(data.type_flag_) {
+        dtype_(data.type_flag_), entry_({nullptr, 0, 0}) {
 #if MKL_EXPERIMENTAL == 1
       Mkl_mem_ = std::make_shared<MKLMemHolder>();
 #endif
@@ -98,6 +123,9 @@ class NDArray {
       res = TBlob(static_cast<DType*>(ptr_->shandle.dptr)
         + offset_ + offset, raw_shape, ptr_->shandle.ctx.dev_mask());
     });
+#if MKL_EXPERIMENTAL == 1
+    res.Mkl_mem_ = Mkl_mem_;
+#endif
     return res;
   }
   /*!
@@ -270,10 +298,36 @@ class NDArray {
   inline NDArray At(index_t idx) const {
     NDArray ret = *this;
     CHECK(!is_none()) << "NDArray is not initialized";
-    CHECK_GE(shape_[0], idx) << "index out of range";
+    CHECK_GT(shape_[0], idx) << "index out of range";
     size_t length = shape_.ProdShape(1, shape_.ndim());
     ret.offset_ += idx * length;
-    ret.shape_ = TShape(shape_.data()+1, shape_.data()+shape_.ndim());
+    if (shape_.ndim() > 1) {
+      ret.shape_ = TShape(shape_.data()+1, shape_.data()+shape_.ndim());
+    } else {
+      ret.shape_ = mshadow::Shape1(1);
+    }
+    return ret;
+  }
+  /*!
+   * \brief Create a NDArray that shares memory with current one
+   *  The new array must have smaller memory size than the current array.
+   * \param shape new shape
+   * \param dtype The data type.
+   * \return NDArray in new shape and type.
+   */
+  inline NDArray AsArray(const TShape &shape, int dtype) const {
+    CHECK_GE(shape_.Size() * mshadow::mshadow_sizeof(dtype_),
+             shape.Size() * mshadow::mshadow_sizeof(dtype))
+        << "NDArray.AsArray: target memory size is bigger";
+#if MKL_EXPERIMENTAL == 1
+    if (Mkl_mem_ != nullptr) {
+      // convert prv to cpu
+      Mkl_mem_->check_and_prv_to_cpu(ptr_->shandle.dptr);
+    }
+#endif
+    NDArray ret = *this;
+    ret.shape_ = shape;
+    ret.dtype_ = dtype;
     return ret;
   }
   /*!
@@ -315,6 +369,7 @@ class NDArray {
                    std::vector<std::string>* keys);
 
  private:
+  friend class autograd::AutogradRuntime;
   /*! \brief the real data chunk that backs NDArray */
   struct Chunk {
     /*! \brief storage handlefrom storage engine */
@@ -384,7 +439,9 @@ class NDArray {
   /*! \brief offset in chunk */
   size_t offset_;
   /*! \brief type of data */
-  int dtype_;
+  int dtype_ = -1;
+  /*! \brief node entry for autograd */
+  autograd::AGNodeEntry entry_;
 };
 
 /*!
@@ -478,7 +535,6 @@ void RandomSeed(uint32_t seed);
  * \param out output NDArray.
  */
 void SampleUniform(real_t begin, real_t end, NDArray *out);
-
 /*!
  * \brief Sample gaussian distribution for each elements of out.
  * \param mu mean of gaussian distribution.
@@ -486,9 +542,45 @@ void SampleUniform(real_t begin, real_t end, NDArray *out);
  * \param out output NDArray.
  */
 void SampleGaussian(real_t mu, real_t sigma, NDArray *out);
+/*!
+ * \brief Sample gamma distribution for each elements of out.
+ * \param alpha parameter (shape) of the gamma distribution
+ * \param beta parameter (scale) of the gamma distribution
+ * \param out output NDArray.
+ */
+void SampleGamma(real_t alpha, real_t beta, NDArray *out);
+/*!
+ * \brief Sample exponential distribution for each elements of out.
+ * \param lambda parameter (rate) of the exponential distribution
+ * \param out output NDArray.
+ */
+void SampleExponential(real_t lambda, NDArray *out);
+/*!
+ * \brief Sample Poisson distribution for each elements of out.
+ * \param lambda parameter (rate) of the Poisson distribution
+ * \param out output NDArray.
+ */
+void SamplePoisson(real_t lambda, NDArray *out);
+/*!
+ * \brief Sample negative binomial distribution for each elements of out.
+ * \param k failure limit
+ * \param p success probability 
+ * \param out output NDArray.
+ */
+void SampleNegBinomial(int32_t k, real_t p, NDArray *out);
+/*!
+ * \brief Sample generalized negative binomial distribution for each elements of out.
+ * \param mu parameter (mean) of the distribution
+ * \param alpha parameter (over dispersion) of the distribution
+ * \param out output NDArray.
+ */
+void SampleGenNegBinomial(real_t mu, real_t alpha, NDArray *out);
+
+
 //--------------------------------------------------------------
 // The following part are API Registration of NDArray functions.
 //--------------------------------------------------------------
+
 /*! \brief definition of NDArray function */
 typedef std::function<void (NDArray **used_vars,
                             real_t *scalars,

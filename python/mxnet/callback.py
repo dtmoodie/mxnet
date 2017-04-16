@@ -8,20 +8,48 @@ import sys
 import time
 from .model import save_checkpoint
 
+def module_checkpoint(mod, prefix, period=1, save_optimizer_states=False):
+    """Callback to checkpoint Module to prefix every epoch.
+
+    Parameters
+    ----------
+    mod : subclass of BaseModule
+        The module to checkpoint.
+    prefix : str
+        The file prefix for this checkpoint.
+    period : int
+        How many epochs to wait before checkpointing. Defaults to 1.
+    save_optimizer_states : bool
+        Indicates whether or not to save optimizer states for continued training.
+
+    Returns
+    -------
+    callback : function
+        The callback function that can be passed as iter_end_callback to fit.
+    """
+    period = int(max(1, period))
+    # pylint: disable=unused-argument
+    def _callback(iter_no, sym=None, arg=None, aux=None):
+        """The checkpoint function."""
+        if (iter_no + 1) % period == 0:
+            mod.save_checkpoint(prefix, iter_no + 1, save_optimizer_states)
+    return _callback
+
+
 def do_checkpoint(prefix, period=1):
     """Callback to checkpoint the model to prefix every epoch.
 
     Parameters
     ----------
     prefix : str
-        The file prefix to checkpoint to
+        The file prefix for this checkpoint.
     period : int
-    	How many epochs to wait before checkpointing. Default is 1.
+    	How many epochs to wait before checkpointing. Defaults to 1.
 
     Returns
     -------
     callback : function
-        The callback function that can be passed as iter_end_callback to fit.
+        The callback function that can be passed as ``iter_end_callback`` to fit.
     """
     period = int(max(1, period))
     def _callback(iter_no, sym, arg, aux):
@@ -39,7 +67,7 @@ def log_train_metric(period, auto_reset=False):
     period : int
         The number of batch to log the training evaluation metric.
     auto_reset : bool
-        Reset the metric after each log
+        Reset the metric after each log.
 
     Returns
     -------
@@ -64,7 +92,7 @@ class Speedometer(object):
     Parameters
     ----------
     batch_size: int
-        batch_size of data
+        batch_size of data.
     frequent: int
         How many batches between calculations.
         Defaults to calculating & logging every 50 batches.
@@ -125,8 +153,7 @@ class ProgressBar(object):
 
 
 class LogValidationMetricsCallback(object):
-    """Just logs the eval metrics at the end of an epoch.
-    """
+    """Just logs the eval metrics at the end of an epoch."""
 
     def __call__(self, param):
         if not param.eval_metric:

@@ -3,7 +3,7 @@
 html, body {
     margin: 0;
     padding: 0;
-    background-color: #ffffff; 
+    background-color: #ffffff;
 }
 
 body {
@@ -13,87 +13,80 @@ body {
 body, div {
     font-family: "Open Sans", "Lucida Grande", "Helvetica Neue", Arial;
     font-size: 16px;
-    color: #444444; 
+    color: #000;
 }
 
 p {
     font-family: "Open Sans", "Lucida Grande", "Helvetica Neue", Arial;
-    color: #444444;
+    color: #000;
     font-size: 16px;
-    line-height: 1.5em; 
-}
-
-p.title {
-    margin-bottom: 12px; 
+    line-height: 1.5em;
 }
 
 #language-filter {
     float: right;
-    margin-top: 5px; 
+    margin-top: 5px;
 }
 
 li, dt a, dt span {
     font-size: 16px;
-    line-height: 1.5em; 
+    line-height: 1.5em;
 }
 
-/*Content paragraph space*/
-div.content p {
-    margin-top: 20px;
-}
+/* /\*Content paragraph space*\/ */
+/* div.content p { */
+/*     margin-top: 20px; */
+/* } */
 
 /*------------------ Headings -------------------*/
 h1, h2, h3 {
     font-family: "Open Sans", "Lucida Grande", "Helvetica Neue", Arial;
-    color: #444444; 
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 h1 {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
-    padding-top: 12px; 
+    padding-top: 10px;
+    color: slategray;
 }
 
 h2 {
-    font-size: 18px;
-    font-weight: bold;
-    padding-top: 1.5em;
-    margin: 1em 0;
-    color: #cc6600; 
+    font-size: 20px;
+    /* font-weight: bold; */
+    padding-top: 10px;
+    color: slategray;
 }
 
 h3 {
-    font-size: 16px;
-    padding-top: 1.2em;
-    font-weight: bold;
-    color: #007697; 
+    font-size: 18px;
+    padding-top: 8px;
+    /* font-weight: bold; */
+    color: slategray;
 }
 
-h3.orange {
-    color: #cc6600; }
 
 h4 {
-    color: #cc6600;
+    color: slategray;
     font-size: 16px;
-    padding-top: 1.2em;
+    padding-top: 6px;
     font-style: italic;
-    font-weight: bold; 
+    /* font-weight: bold; */
 }
 
 h5 {
     color: #333333;
     font-size: 16px;
-    padding-top: 1em;
     font-style: italic;
-    font-weight: bold; 
+    font-weight: bold;
 }
 
 h6 {
     color: #333333;
     font-size: 14px;
-    padding-top: 1em;
     font-style: italic;
-    font-weight: bold; 
+    font-weight: bold;
 }
 
 img {
@@ -102,14 +95,14 @@ img {
     border-color: #ffffff;
     /* white  */
     padding: 0px 0px 0px 0px;
-    margin: 0px 0px 0px 0px; 
+    margin: 0px 0px 0px 0px;
 }
 
 .topictitle {
     font-size: 24px;
     font-weight: bold;
     color: #e47911;
-    padding: 0 0 14px 0; 
+    padding: 0 0 14px 0;
 }
 
 .section:before {
@@ -125,20 +118,17 @@ img {
     opacity: 0.9;
     border: 0px;
     height: 60px;
-    padding: 0 80px;
     margin-bottom: 0px;
 }
 
-@media screen and (max-width: 480px) {
-    #navContainer {
-        position: fixed;
-        left: 0;
-    }
+.navbar .container {
+    position: fixed;
+    left: 20px;
 }
 
-@media screen and (max-width: 405px) {
+@media screen and (max-width: 510px) {
     .navbar {
-        height: 80px;
+        height: 60px;
     }
 }
 
@@ -174,6 +164,13 @@ img {
     -webkit-box-flex: 1;
    padding-top: 0;
     margin-top: 0;
+    width: 125px;
+}
+
+@media screen and (max-width: 405px) {
+    #logo-wrap {
+        margin-left: -25px;
+    }
 }
 
 #logo {
@@ -189,12 +186,13 @@ img {
   width: 110px;
 }
 
-#main-nav {
+.nav-bar {
     display: block;
     -webkit-box-flex: 1;
     flex: 1 auto;
     position: relative;
     top: -5px;
+    white-space: nowrap;
 }
 
 .main-nav-link {
@@ -206,35 +204,12 @@ img {
     transition: .2s;
     font-family: Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
     display: inline-block;
-    padding: 0 15px
-}
-
-@media screen and (max-width: 1085px) {
-    #main-nav {
-        display: block;
-        font-size: 75%
-    }
-    
-    .main-nav-link {
-        padding: 0 10px
-    }
-}
-
-@media screen and (max-width: 930px) {
-    .main-nav-link {
-        padding: 0 5px
-    }
-}
-
-@media screen and (max-width:870px) {
-    #main-nav {
-        display: none
-    }
+    padding: 0 15px;
 }
 
 .main-nav-link:hover {
     opacity: 1;
-    color: #1094e8;
+    color: #fff;
     text-decoration: none;
 }
 
@@ -244,7 +219,7 @@ img {
 
 #package-dropdown-menu {
     top: 36px;
-    border-radius: 4px; 
+    border-radius: 4px;
     padding: 0;
 }
 
@@ -255,30 +230,59 @@ img {
 }
 
 #search-input-wrap {
+    display: block;
+    position: fixed;
+    top: 15px;
+    right: 40px;
+    width: 140px;
+}
+
+#searchIcon {
     display: none;
-    padding-left: 6px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #999
+    position: fixed;
+    top: 20px;
+    right: 155px;
+    color: white;
 }
 
-#search-input-icon,
-#search-input-wrap.on {
-    display: inline-block
+.searchBox {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 140px;
 }
 
-#search-input-icon {
-    color: #fff;
-    padding-right: .5em;
-    opacity: .7
+.searchBtn {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
 }
 
-#search-input {
-    background: none;
-    font-size: inherit;
-    font-family: Lato, Helvetica Neue, Helvetica, Arial, sans-serif;
-    color: #fff;
-    outline: none;
-    -webkit-appearance: none
+@media screen and (max-width: 510px) {
+    #search-input-wrap {
+        display: none;
+        top: 50px;
+        left: 50%;
+        right: initial;
+        margin-left: -100px;
+        width: 200px;
+    }
+
+    div .searchBox {
+        width: 200px;
+    }
+
+    #searchIcon {
+        display: block;
+    }
+}
+
+@media screen and (min-width: 511px) {
+    #search-input-wrap {
+        display: block !important;
+    }
 }
 
 #lang-select-wrap {
@@ -314,28 +318,15 @@ img {
     font-size: inherit
 }
 
-@media screen and (max-width: 405px) {
-    #lang-select-wrap {
-        position: fixed;
-        top: 40px;
-        left: 90px;
-        width: 75px
-    }
-}
+.github-btn { border: 0; overflow: hidden }
 
 /*burger icon*/
 div .burgerIcon {
     font-size: 25px;
     position: fixed;
-    right: 185px;
+    right: 155px;
     top: 10px;
     display: none
-}
-
-@media screen and (max-width:870px) {
-    div .burgerIcon {
-        display: block
-    }
 }
 
 div .burgerIcon a {
@@ -344,23 +335,21 @@ div .burgerIcon a {
 
 @media screen and (max-width: 405px) {
     div .burgerIcon {
-        top: 45px;
-        left: 70px
+        margin-left: -25px;
     }
 }
 
 /*burger menu*/
-#burgerMenu {
+#burgerMenu, #plusMenu {
     list-style-type: none;
-    margin: 0;
+    margin-top: 10px;
     padding: 0;
     background-color: white;
     list-style-position: inside;
-    border-radius: 8px;
-    min-width: 100px
+    min-width: 100px;
 }
 
-#burgerMenu a {
+#burgerMenu a, #plusMenu a {
     display: table-cell;
     font-size: 15px;
     color: #0079b2;
@@ -371,7 +360,7 @@ div .burgerIcon a {
     max-width: 200px
 }
 
-#burgerMenu li {
+#burgerMenu li, #plusMenu li {
     height: 30px;
     list-style-position: inside;
 }
@@ -438,6 +427,31 @@ li.dropdown-submenu ul.dropdown-menu a {
     border-radius: 6px 0 6px 6px
 }
 
+/*Plus icon*/
+.plusIcon {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 175px;
+    width: 30px;
+}
+
+.glyphicon-plus {
+    color: white;
+}
+
+@media screen and (max-width:600px) {
+    div .plusIcon, .nav-bar {
+        display: none !important;
+    }
+
+    div .burgerIcon {
+        display: block;
+        position: fixed;
+        top: 10px;
+        left: 150px;
+    }
+}
 /*--------------------------banner---------------------------*/
 #splash{
     padding:60px 0 0 0;
@@ -471,13 +485,13 @@ li.dropdown-submenu ul.dropdown-menu a {
 @media screen and (max-width:768px) {
     #splash #banner-title {
             font-size: 30px;
-            padding: 20px 30px 10px 30px;
+            padding: 60px 30px 10px 30px;
     }
 }
 
-@media screen and (max-width:405px) {
+@media screen and (max-width:510px) {
     #splash #banner-title {
-            padding-top: 40px;
+            padding-top: 60px;
     }
 }
 
@@ -530,6 +544,7 @@ li.dropdown-submenu ul.dropdown-menu a {
 
 .section-tout h3{
     font-size:20px;
+    color: #0079b2;
 }
 
 .section-tout p {
@@ -546,6 +561,19 @@ li.dropdown-submenu ul.dropdown-menu a {
 .section-inst p {
     margin-bottom:2em
 }
+
+@media (min-width: 1200px) {
+    .section-inst .row div.clear {
+        clear: both;
+    }
+}
+
+@media (max-width: 1199px) {
+    .section-inst .row div.smallClear {
+        clear: both;
+    }
+}
+
 .section-inst img {
     -webkit-filter: grayscale(90%); /* Chrome, Safari, Opera */
     filter: grayscale(90%);
@@ -573,7 +601,7 @@ li.dropdown-submenu ul.dropdown-menu a {
 
 /*------------------content----------------------*/
 div.navbar + div.container {
-    padding-top: 80px;
+    padding-top: 65px;
 }
 
 div.content {
@@ -581,13 +609,13 @@ div.content {
     left: 310px;
     right: 0;
     margin-right: 5%;
-    overflow-x: hidden;
+    z-index: -1;
 }
 
 @media (max-width: 999px) {
     div.content {
         left: 0;
-        margin-left: 5%; 
+        margin-left: 5%;
         overflow-x: auto;
     }
 }
@@ -595,21 +623,22 @@ div.content {
 /*------------------sidebar-----------------------*/
 div.sphinxsidebar {
     position: fixed;
+    background-color: white;
     left: 30px;
     margin-left: 0;
     width: 250px;
-    padding:0 30px 15px 0;
+    padding:20px 30px 15px 0;
     height: calc(100% - 80px);
-    overflow: scroll;
     display: none;
+    overflow: auto;
 }
 
-div.sphinxsidebar ul { 
+div.sphinxsidebar ul {
     padding: 0;
     list-style-type: none !important;
 }
 
-div.sphinxsidebarwrapper > ul { 
+div.sphinxsidebarwrapper > ul {
     padding-left: 20px;
 }
 
@@ -646,15 +675,6 @@ div.sphinxsidebar li.leaf .tocToggle:before {
 
 div.sphinxsidebarwrapper h3 {
     padding-top: 0;
-}
-
-.github-btn { border: 0; overflow: hidden }
-
-.navbar .container {
-    margin-right: auto;
-    margin-left: 50px;
-    padding-left: 15px;
-    padding-right: 15px
 }
 
 /*-------------------- table styles --------------------*/
@@ -733,21 +753,141 @@ div.informaltable {
   text-align: left; }
 
 /*----------------API class and function formatting---------------------*/
-dl.class > dt:before, dl.function > dt:before {
+dl > dt:before {
     content: " ";
     display: block;
-    height: 80px; /* fixed header height*/
-    margin: -50px 0 0; /* negative fixed header height */
+    height: 70px; /* fixed header height*/
+    margin-top: -70px; /* negative fixed header height */
 }
 
-dt {
-    background-color: white !important;
+p.rubric {
+    margin-top: 10px;
 }
 
-dl.method, dl.attribute {
-    padding-top: 15px;
+dt:target, .highlighted {
+    background-color: #fff;
+    border-bottom: 3px solid #c7254e;
+    margin-bottom: -3px;
 }
 
-dl.class p, dl.function p {
-    color: #cc6600;
+/*----------------Model zoo page style------------------*/
+#mxnet-model-zoo table, #mxnet-model-zoo td, #mxnet-model-zoo th {
+    border: 1px solid lightgray;
+}
+
+#mxnet-model-zoo table {
+    margin-top: 30px;
+    border-collapse: collapse;
+}
+
+#mxnet-model-zoo th {
+    vertical-align: middle;
+    text-align: center;
+    height: 50px;
+}
+
+#mxnet-model-zoo td {
+    vertical-align: middle;
+    height: 50px;
+    padding: 10px;
+}
+
+#mxnet-model-zoo tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+/*--------- note block -----------*/
+div.admonition {
+    padding: 15px;
+    background-color: #f6f8fa;
+    border: 1px solid rgb(204, 204, 204);
+    border-radius: 4px;
+}
+
+p.admonition-title {
+    color: #187dbb;
+}
+
+/*------------ code block ------------*/
+pre {
+    background-color: #f6f8fa;
+}
+
+/*-------------API table---------------------*/
+table.docutils {
+    margin-top: 15px;
+}
+
+table.docutils td, table.docutils th {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    /* border-top: 0; */
+    /* border-left: 0; */
+    /* border-right: 0; */
+    border: 1px solid rgb(223, 226, 229);
+}
+
+table.docutils tr:nth-child(even) {
+    background-color: #f6f8fa;
+}
+
+/*---------------getting started homepage---------*/
+
+#lang-demo ul {
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+.option-title {
+    width: 100px;
+    float: left;
+    clear: none;
+    text-align: right;
+    font-size: 14px;
+    padding-top: 7px;
+    padding-bottom: 8px;
+    padding-right: 10px;
+    font-weight: bold;
+}
+.option-row {
+    padding-bottom: 8px;
+}
+
+.install-inst {
+}
+
+.btn-default:hover, .btn-default:focus, .btn-default:active,
+.btn-default.active.focus, .btn-default.active:focus, .btn-default.active:hover,
+.btn-default:active.focus, .btn-default:active:focus, .btn-default:active:hover,
+.btn-default.active, .open>.dropdown-toggle.btn-default,
+.btn-default:active:focus {
+    color: #fff;
+    background-color: #0079b2;
+    border-color: #0079b2;
+}
+
+#setup-options {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    margin-left: 30px;
+}
+
+.opt-group {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/*----------------Copy code button------------------------*/
+.copy-btn {
+    display: none;
+    position: absolute;
+    right: 0;
+    width: 40px;
+    height: 38px;
+}
+
+div.toctree-wrapper.compound > ul > li {
+    padding: 5px 0 5px 0;
 }

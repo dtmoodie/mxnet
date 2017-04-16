@@ -32,7 +32,18 @@ wget http://data.mxnet.io/mxnet/data/mnist.zip
 unzip mnist.zip && s3cmd put t*-ubyte s3://dmlc/mnist/
 ```
 
-### Set Up an EC2 GPU Instance
+### Use Pre-installed EC2 GPU Instance
+The [Deep Learning AMI](https://aws.amazon.com/marketplace/pp/B01M0AXXQB?qid=1475211685369&sr=0-1&ref_=srh_res_product_title) is an Amazon Linux image supported and maintained by Amazon Web Services for use on Amazon Elastic Compute Cloud (Amazon EC2). It contains [MXNet-v0.9.3 tag](https://github.com/dmlc/mxnet) and needed components to speed productivity including Nvidia drivers, CUDA, cuDNN, Anaconda, Python2 and Python3.   
+The AMI Ids are the following:
+
+* us-east-1: ami-e7c96af1
+* us-west-2: ami-dfb13ebf
+* eu-west-1: ami-6e5d6808
+
+Now, you can launch MXNet easily and directly within an EC2 GPU instance.  
+You can also use [Jupyter](http://jupyter.org) notebook on EC2 machine. Here is a [good tutorial](https://github.com/dmlc/mxnet-notebooks) on how to run it.
+
+### Set Up an EC2 GPU Instance from Scratch
 
 MXNet requires the following libraries:
 
@@ -43,7 +54,7 @@ MXNet requires the following libraries:
 - `curl` and `openssl` for the ability to read/write to Amazon S3
 
 Installing `CUDA` on EC2 instances requires some effort. Caffe has a good
-[tutorial](https://github.com/BVLC/caffe/wiki/Install-Caffe-on-EC2-from-scratch-(Ubuntu,-CUDA-7,-cuDNN))
+[tutorial](https://github.com/BVLC/caffe/wiki/Install-Caffe-on-EC2-from-scratch-(Ubuntu,-CUDA-7,-cuDNN-3))
 on how to install CUDA 7.0 on Ubuntu 14.04.
 
 ***Note:*** We tried CUDA 7.5 on Nov 7,
@@ -119,10 +130,11 @@ directory of the root computer, such as `~/train`, and MXNet is built as `~/mxne
   And then copy the training program:
 
   ```bash
-  cp ~/mxnet/example/image-classification/*.py 
+  cp ~/mxnet/example/image-classification/*.py .
+  cp -r ~/mxnet/example/image-classification/common .
   ```
 
-2. Prepare a host file with all slaves's private IPs. For example, `cat hosts`:
+2. Prepare a host file with all slaves private IPs. For example, `cat hosts`:
 
   ```bash
   172.30.0.172
@@ -147,7 +159,7 @@ benchmark for distributed training. Consider using other [examples](https://gith
 
 ### More Options
 #### Use Multiple Data Shards
-It is common to pack a dataset into multiple files, especially when working in a distributed environment. MXNet supports direct loading from multiple data shards. Pput all of the record files into a folder, and point the data path to the folder.
+It is common to pack a dataset into multiple files, especially when working in a distributed environment. MXNet supports direct loading from multiple data shards. Put all of the record files into a folder, and point the data path to the folder.
 
 #### Use YARN and SGE
 Although using SSH can be simple when you don't have a cluster scheduling framework, MXNet is designed to be portable to various platforms.  We provide other scripts in [tracker](https://github.com/dmlc/dmlc-core/tree/master/tracker) to allow running on other cluster frameworks, including Hadoop (YARN) and SGE. We welcome your contribution of examples of running MXNet on your favorite distributed platform.

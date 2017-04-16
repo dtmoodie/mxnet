@@ -11,7 +11,11 @@
 #include "mxnet/engine.h"
 #include "ps/ps.h"
 #include "./kvstore_dist_server.h"
-
+#if MKL_EXPERIMENTAL == 1
+#include <mkl_memory.h>
+#include "../operator/mkl/mkl_memory-inl.h"
+#include "../operator/mkl/mkl_util-inl.h"
+#endif
 namespace mxnet {
 namespace kvstore {
 
@@ -97,6 +101,9 @@ class KVStoreDist : public KVStoreLocal {
         // it may happen for the first time a no-rank-0 worker pull the weight.
         recv_buf = NDArray(grouped_vals[i][0]->shape(), pinned_ctx_);
       }
+#if MKL_EXPERIMENTAL == 1
+      mkl_set_tblob_eager_mode(recv_buf.data());
+#endif
       real_t* data = static_cast<real_t*>(recv_buf.data().dptr_);
       size_t size = recv_buf.shape().Size();
 
@@ -116,7 +123,9 @@ class KVStoreDist : public KVStoreLocal {
           pinned_ctx_,
           {},
           {recv_buf.var()},
-          FnProperty::kNormal, priority);
+          FnProperty::kNormal,
+          priority,
+          PROFILER_MESSAGE("KVStoreDistPull"));
 
       comm_->Broadcast(key, recv_buf, grouped_vals[i], priority);
     }
@@ -204,7 +213,11 @@ class KVStoreDist : public KVStoreLocal {
       }
 
       // push to servers
+      send_buf.WaitToRead();
       size_t size = send_buf.shape().Size();
+#if MKL_EXPERIMENTAL == 1
+      mkl_set_tblob_eager_mode(send_buf.data());
+#endif
       real_t* data = static_cast<real_t*>(send_buf.data().dptr_);
       auto push_to_servers =
           [this, key, data, size](RunContext rctx, Engine::CallbackOnComplete cb) {
@@ -221,7 +234,9 @@ class KVStoreDist : public KVStoreLocal {
           pinned_ctx_,
           {send_buf.var()},
           {},
-          FnProperty::kNormal, priority);
+          FnProperty::kNormal,
+          priority,
+          PROFILER_MESSAGE("KVStoreDistPush"));
     }
   }
 
@@ -283,8 +298,8 @@ class KVStoreDist : public KVStoreLocal {
         pskv.size = 0;
         for (int i = 0; i < num_servers; ++i) {
           size_t part_size =
-              static_cast<size_t>(static_cast<double>(size)/num_servers*(i+1)) -
-              static_cast<size_t>(static_cast<double>(size)/num_servers*i);
+              static_cast<size_t>(round(static_cast<double>(size)/num_servers*(i+1))) -
+              static_cast<size_t>(round(static_cast<double>(size)/num_servers*i));
           ps::Key ps_key = krs[i].begin() + key;
           CHECK_LT(ps_key, krs[i].end());
           pskv.keys.push_back(ps_key);
