@@ -55,7 +55,7 @@ USE_CUDA_PATH = /usr/local/cuda
 USE_CUDNN = 1
 
 # whether use cuda runtime compiling for writing kernels in native language (i.e. Python)
-USE_NVRTC = 1
+USE_NVRTC = 0
 
 # whether use opencv during compilation
 # you can disable it, however, you will not able to use
