@@ -124,7 +124,7 @@ class CountSketchOp : public Operator {
 template<typename xpu>
 Operator* CreateOp(CountSketchParam param, int dtype);
 
-#if DMLC_USE_CXX11
+#if DMLC_USE_CXX11 && !defined(__CUDACC__)
 class CountSketchProp : public OperatorProperty {
  public:
     std::vector<std::string> ListArguments() const override {
@@ -212,8 +212,8 @@ class CountSketchProp : public OperatorProperty {
     const std::vector<int> &out_grad,
     const std::vector<int> &in_data,
     const std::vector<int> &out_data) const override {
-    return {out_grad[CountSketch::kOut], in_data[CountSketch::kData],
-            in_data[CountSketch::kH], in_data[CountSketch::kS]};
+    //return {out_grad[CountSketch::kOut], in_data[CountSketch::kData],
+    //        in_data[CountSketch::kH], in_data[CountSketch::kS]};
   }
 
   std::vector<std::pair<int, void*> > BackwardInplaceOption(

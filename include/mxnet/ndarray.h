@@ -94,8 +94,9 @@ class NDArray {
   NDArray(const TShape &shape, Context ctx,
           bool delay_alloc = false, int dtype = mshadow::default_type_flag)
       : ptr_(std::make_shared<Chunk>(shape, ctx, delay_alloc, dtype)),
-        shape_(shape), dtype_(dtype), storage_type_(kDefaultStorage),
-        entry_({nullptr, 0, 0}) {
+        shape_(shape), dtype_(dtype), storage_type_(kDefaultStorage) {
+    entry_.index = 0;
+    entry_.version = 0;
   }
   /*! \brief constructor for NDArray with storage type
    */
@@ -113,13 +114,16 @@ class NDArray {
    */
   NDArray(const TBlob &data, int dev_id)
       : ptr_(std::make_shared<Chunk>(data, dev_id)), shape_(data.shape_),
-        dtype_(data.type_flag_), storage_type_(kDefaultStorage),
-        entry_({nullptr, 0, 0}) {
+        dtype_(data.type_flag_), storage_type_(kDefaultStorage) {
+    entry_.index = 0;
+    entry_.version = 0;
   }
   /*! \brief create ndarray from shared memory */
   NDArray(int shared_pid, int shared_id, const TShape& shape, int dtype)
       : ptr_(std::make_shared<Chunk>(shared_pid, shared_id, shape, dtype)), shape_(shape),
-        dtype_(dtype), storage_type_(kDefaultStorage), entry_({nullptr, 0, 0}) {
+        dtype_(dtype), storage_type_(kDefaultStorage) {
+    entry_.index = 0;
+    entry_.version = 0;
   }
 
   /*!
@@ -135,7 +139,9 @@ class NDArray {
   NDArray(const NDArrayStorageType stype, const TShape &shape,
           const TBlob &data, const std::vector<TBlob> &aux_data, int dev_id)
       : ptr_(std::make_shared<Chunk>(stype, data, aux_data, dev_id)), shape_(shape),
-        dtype_(data.type_flag_), storage_type_(stype), entry_({nullptr, 0, 0}) {
+        dtype_(data.type_flag_), storage_type_(stype) {
+    entry_.index = 0;
+    entry_.version = 0;
   }
 
   /*

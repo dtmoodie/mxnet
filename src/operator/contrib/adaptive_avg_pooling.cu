@@ -218,12 +218,12 @@ void AdaptiveAvgPoolUpdateGradInput(mshadow::Stream<gpu> *s,
     gradInput_data, gradOutput_data, isizeH, isizeW, osizeH, osizeW);
   MSHADOW_CUDA_POST_KERNEL_CHECK(AdaptiveAvgPoolUpdateGradInput);
 }
-
+#ifndef __CUDA_ARCH__
 NNVM_REGISTER_OP(_contrib_AdaptiveAvgPooling2D)
 .set_attr<FCompute>("FCompute<gpu>", AdaptiveAvgPoolOpForward<gpu>);
 
 NNVM_REGISTER_OP(_backward_contrib_AdaptiveAvgPooling2D)
 .set_attr<FCompute>("FCompute<gpu>", AdaptiveAvgPoolOpBackward<gpu>);
-
+#endif
 }  // namespace op
 }  // namespace mxnet
